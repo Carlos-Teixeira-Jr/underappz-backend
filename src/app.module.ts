@@ -4,6 +4,9 @@ import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose'
 import { LoggerModule } from './logger/logger.module';
 import { ScheduleModule } from '@nestjs/schedule'
+import { LoggerService } from './logger/logger.service';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ErrorsInterceptor } from './common/interceptors/errors.interceptors';
 
 @Module({
   imports: [
@@ -17,6 +20,14 @@ import { ScheduleModule } from '@nestjs/schedule'
     LoggerModule.forRoot(),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    LoggerService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ErrorsInterceptor,
+    }
+  ],
+  exports: [AppService]
 })
 export class AppModule {}
