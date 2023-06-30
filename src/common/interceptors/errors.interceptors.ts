@@ -11,8 +11,8 @@ import {
   UnauthorizedException 
 } from "@nestjs/common";
 import { Observable, catchError } from "rxjs";
-import { InjectorLoggerService } from "src/logger/InjectorLoggerService";
-import { LoggerService } from "src/logger/logger.service";
+import { InjectorLoggerService } from "src/modules/logger/InjectorLoggerService";
+import { LoggerService } from "src/modules/logger/logger.service";
 
 @Injectable()
 export class ErrorsInterceptor implements NestInterceptor {

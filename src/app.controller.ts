@@ -1,8 +1,10 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
-import { InjectorLoggerService } from './logger/InjectorLoggerService';
-import { LoggerService } from './logger/logger.service';
+import { InjectorLoggerService } from './modules/logger/InjectorLoggerService';
+import { LoggerService } from './modules/logger/logger.service';
 import { HealthCheckResponse } from './common/responses/heathCheck.response';
+import { LocalAuthGuard } from './modules/auth/local-auth.guard';
+import { AuthenticatedGuard } from './modules/auth/authenticated.guard';
 
 @Controller()
 export class AppController {
@@ -20,5 +22,18 @@ export class AppController {
       uptime: process.uptime(),
       timestamp: new Date()
     }
+  }
+
+  // Login
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  login(@Request() req): any {
+    return {msg: 'Logged in!'};
+  }
+
+  @UseGuards(AuthenticatedGuard)
+  @Get('protected')
+  getHello(@Request() req): string {
+    return req.user;
   }
 }
