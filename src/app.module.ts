@@ -9,15 +9,22 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ErrorsInterceptor } from './common/interceptors/errors.interceptors';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { UserModelName, UserSchema } from './modules/users/schema/User.schema';
+import { AuthService } from './modules/auth/auth.service';
 
 @Module({
   imports: [
-    // MongooseModule.forRoot(`${process.env.DB_HOST}`, {
-    //   dbName: process.env.DB_NAME,
-    //   autoIndex: false,
-    //   autoCreate: false,
-    // }), 
-    MongooseModule.forFeature([]),
+    MongooseModule.forRoot(`${process.env.DB_HOST}`, {
+      dbName: process.env.DB_NAME,
+      autoIndex: false,
+      autoCreate: false,
+    }), 
+    MongooseModule.forFeature([
+      {
+        name: UserModelName,
+        schema: UserSchema
+      }
+    ]),
     ScheduleModule.forRoot(),
     LoggerModule.forRoot(),
     AuthModule,
@@ -26,6 +33,7 @@ import { UsersModule } from './modules/users/users.module';
   controllers: [AppController],
   providers: [
     AppService,
+    AuthService,
     LoggerService,
     {
       provide: APP_INTERCEPTOR,

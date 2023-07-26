@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -24,7 +25,10 @@ function setupSwagger(app: INestApplication) {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(cors())
+  app.use(cors({
+    origin: '*'
+  }))
+
   setupSwagger(app)
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }))
@@ -39,7 +43,6 @@ async function bootstrap() {
   );
 
   app.use(passport.initialize());
-  app.use(passport.session());
 
   await app.listen(process.env.PORT || 3001);
 }
