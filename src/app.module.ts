@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { UserModelName, UserSchema } from './modules/users/schema/User.schema';
 import { AuthService } from './modules/auth/auth.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AuthService } from './modules/auth/auth.service';
   providers: [
     AppService,
     AuthService,
+    JwtService,
     LoggerService,
     {
       provide: APP_INTERCEPTOR,
