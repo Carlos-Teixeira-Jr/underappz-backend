@@ -16,7 +16,6 @@ export class AuthService {
     private readonly logger: LoggerService,
     @InjectModel(UserModelName)
     private readonly userModel: Model<IUser>,
-    private usersService: UserService
   ) {}
 
   // Cadastro de usuário
@@ -24,9 +23,9 @@ export class AuthService {
     try {
       this.logger.log({}, 'start register > [service]');
 
-      const { email, password, passwordConfirmation } = registerDto;
+      const { email, password, confirmPassword } = registerDto;
 
-      if (password !== passwordConfirmation) {
+      if (password !== confirmPassword) {
         throw new BadRequestException(
           `A confirmação de senha não corresponde à senha inserida.`,
         );

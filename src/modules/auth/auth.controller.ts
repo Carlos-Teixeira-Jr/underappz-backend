@@ -1,11 +1,16 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Logger, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { ApiOperation } from "@nestjs/swagger";
+import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { RegisterDto } from "../users/dto/register.dto";
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  private logger = new Logger(AuthController.name)
+
+  constructor(
+    private readonly authService: AuthService,
+  ) {}
 
   @Post('register')
   @ApiOperation({
@@ -13,6 +18,8 @@ export class AuthController {
       'Creates an account using email, password and password confirmation and returns user data.',
   })
   async register(@Body() registerDto: RegisterDto): Promise<any> {
+    this.logger.log({ registerDto }, 'start login > [auth controller]')
+
     return await this.authService.register(registerDto)
   }
 
