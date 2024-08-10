@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, LoggerService } from '@nestjs/common';
+import { BadRequestException, Injectable, LoggerService, NotFoundException } from '@nestjs/common';
 import { UserService } from '../users/users.service';
 import { sendEmailVerificationCode } from 'src/common/utils/emailHandlers/emailVerification';
 import { generateRandomString } from 'src/common/utils/generateRandomString';
@@ -8,6 +8,12 @@ import { IUser, UserModelName } from '../users/schema/User.schema';
 import { Model } from 'mongoose';
 import { InjectorLoggerService } from '../logger/InjectorLoggerService';
 import * as bcrypt from 'bcrypt';
+import { ReSendVerifyEmailDto } from './dto/re-send-email-verification.dto';
+
+export interface IVerifyEmail {
+  emailVerificationCode: string
+  emailVerificationExpiry: Date
+}
 
 @Injectable()
 export class AuthService {
@@ -68,6 +74,58 @@ export class AuthService {
     } catch (error) {
       this.logger.error(error, 'exception');
       throw error;
+    }
+  }
+
+  async reSendVerifyEmail(
+    reSendVerifyEmailDto: ReSendVerifyEmailDto,
+  ): Promise<IVerifyEmail> {
+    try {
+      this.logger.log({}, 'start re-send-verify-email')
+
+      const { email } = reSendVerifyEmailDto
+
+      const newEmailVerificationCode = generateRandomString()
+
+      const newExpiryDate = new Date(Date.now() + 24 * 60 * 60 * 1000)
+
+      const updateUser = await this.userModel.updateOne(
+        { email: email },
+        {
+          $set: {
+            emailVerificationCode: newEmailVerificationCode,
+            emailVerificationExpiry: newExpiryDate,
+          },
+        },
+      )
+
+      if (updateUser.modifiedCount === 0) {
+        throw new NotFoundException(
+          `Usuário com o email ${email} não encontrado`,
+        )
+      }
+
+      // Consultar o usuário após a atualização
+      const updatedUser = await this.userModel.findOne({
+        email: email,
+        isActive: true,
+      })
+
+      if (!updatedUser) {
+        throw new NotFoundException(
+          `Usuário com o email ${email} não encontrado`,
+        )
+      }
+
+      await sendEmailVerificationCode(email, newEmailVerificationCode)
+
+      return {
+        emailVerificationCode: updatedUser.emailVerificationCode,
+        emailVerificationExpiry: updatedUser.emailVerificationExpiry,
+      }
+    } catch (error) {
+      this.logger.error(error, 'exception')
+      throw error
     }
   }
 }
