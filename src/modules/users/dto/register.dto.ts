@@ -13,5 +13,5 @@ export class RegisterDto {
   @IsNotEmpty()
   @IsString()
   @Validate((value, args) => value === args.object.password)
-  passwordConfirmation: string
+  confirmPassword: string
 }

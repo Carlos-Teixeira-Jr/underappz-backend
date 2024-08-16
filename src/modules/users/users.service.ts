@@ -1,14 +1,36 @@
-import { BadRequestException, Injectable, LoggerService, NotFoundException } from "@nestjs/common";
-import { RegisterDto } from "./dto/register.dto";
-import { InjectorLoggerService } from "../logger/InjectorLoggerService";
-import { InjectModel } from "@nestjs/mongoose";
-import { IUser, UserModelName } from "./schema/User.schema";
-import { Model } from 'mongoose';
-import { generateRandomString } from "src/common/utils/generateRandomString";
-import * as bcrypt from 'bcrypt'
-import { sendEmailVerificationCode } from "src/common/utils/emailHandlers/emailVerification";
-import { LocalLoginDto } from "./dto/local-login.dto";
-import { JwtService } from "@nestjs/jwt";
+import {
+  BadRequestException,
+  Injectable,
+  LoggerService,
+  NotFoundException,
+} from '@nestjs/common';
+import { RegisterDto } from './dto/register.dto';
+import { InjectorLoggerService } from '../logger/InjectorLoggerService';
+import { InjectModel } from '@nestjs/mongoose';
+import { IUser, UserModelName } from './schema/User.schema';
+import { Model, Schema } from 'mongoose';
+import { generateRandomString } from 'src/common/utils/generateRandomString';
+import * as bcrypt from 'bcrypt';
+import { sendEmailVerificationCode } from 'src/common/utils/emailHandlers/emailVerification';
+import { LocalLoginDto } from './dto/local-login.dto';
+import { JwtService } from '@nestjs/jwt';
+import { GetUserByEmailDto } from './dto/get-user-by-email.dto';
+
+export type PartialUserData = {
+  _id: Schema.Types.ObjectId
+  email: string
+  username: string
+  picture: string
+  // address: {
+  //   zipCode: string
+  //   city: string
+  //   uf: string
+  //   streetName: string
+  //   streetNumber: string
+  //   complement: string
+  //   neighborhood: string
+  // }
+}
 
 @Injectable()
 export class UserService {
@@ -18,114 +40,112 @@ export class UserService {
     @InjectModel(UserModelName)
     private readonly userModel: Model<IUser>,
     private jwtService: JwtService,
-
   ) {}
 
-  // Cadastro de usuário
-  async register(registerDto: RegisterDto): Promise<any> {
+  // Login local (username e senha);
+  async localLogin(localLoginDto: LocalLoginDto): Promise<any> {
     try {
-      this.logger.log({}, 'start register > [service]')
+      this.logger.log({}, 'start local login > [service]');
 
-      const { email, password, passwordConfirmation } = registerDto
-
-      if (password !== passwordConfirmation) {
-        throw new BadRequestException(
-          `A confirmação de senha não corresponde à senha inserida.`,
-        )
-      }
+      const { email, password } = localLoginDto;
 
       const existingUser = await this.userModel.findOne({
-        email,
+        email: email,
         isActive: true,
-      })
+      });
 
-      if (existingUser) {
-        throw new BadRequestException(
-          `O email: ${email} já está vinculado a uma conta cadastrada.`,
-        )
+      if (!existingUser) {
+        throw new NotFoundException(
+          `O usuário com o email: ${email} não foi encontrado`,
+        );
       }
 
-      const emailVerificationCode = generateRandomString()
-      const emailVerificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
+      const passwordMatched = await bcrypt.compare(
+        password,
+        existingUser.password,
+      );
 
-      const encryptedPassword = await bcrypt.hash(password, 10)
-      const createdUser = await this.userModel.create({
+      if (!passwordMatched || existingUser.email !== email) {
+        throw new BadRequestException(
+          `O usuário ou a senha informados estão incorretos`,
+        );
+      }
+
+      const payload = {
+        sub: existingUser._id,
         email: email,
-        password: encryptedPassword,
-        emailVerificationCode,
-        emailVerificationExpiry,
-      })
+      };
 
-      await sendEmailVerificationCode(email, emailVerificationCode)
+      const access_token = this.jwtService.sign(payload, {
+        expiresIn: process.env.TOKEN_EXPIRY,
+      });
+
+      const refresh_token = this.jwtService.sign(payload, {
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+      });
 
       return {
-        _id: createdUser._id,
-        username: createdUser.username,
-        email: createdUser.email,
-        isEmailVerified: createdUser.isEmailVerified,
-        emailVerificationCode: createdUser.emailVerificationCode,
-        emailVerificationExpiry: createdUser.emailVerificationExpiry,
+        access_token,
+        refresh_token,
+        _id: existingUser._id,
+        username: existingUser.username,
+        picture: existingUser.picture,
+        email: existingUser.email,
+        isEmailVerified: existingUser.isEmailVerified,
+      };
+    } catch (error) {
+      this.logger.error(error, 'exception');
+      throw error;
+    }
+  }
+
+  async findOne(_id: Schema.Types.ObjectId): Promise<PartialUserData> {
+    try {
+      this.logger.log({ _id }, 'start find user by id > [service]')
+
+      const user = await this.userModel.findById(_id)
+
+      if (!user || !user.isActive) {
+        throw new NotFoundException(`Usuário com o id: ${_id} não encontrado.`)
+      }
+
+      return {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        picture: user.picture,
+        // address: user.address,
       }
     } catch (error) {
-      this.logger.error(error, 'exception')
+      this.logger.error({
+        error: JSON.stringify(error),
+        exception: '> exception',
+      })
       throw error
     }
   }
 
-    // Login local (username e senha);
-    async localLogin(localLoginDto: LocalLoginDto): Promise<any> {
-      try {
-        this.logger.log({}, 'start local login > [service]')
-  
-        const { email, password } = localLoginDto;
-  
-        const existingUser = await this.userModel.findOne({
-          email: email,
-          isActive: true,
-        })
-  
-        if (!existingUser) {
-          throw new NotFoundException(
-            `O usuário com o email: ${email} não foi encontrado`,
-          )
-        }
-  
-        const passwordMatched = await bcrypt.compare(
-          password,
-          existingUser.password,
+  async findOneByEmail(body: GetUserByEmailDto): Promise<IUser> {
+    try {
+      this.logger.log({ body }, 'findOneByEmail > [service]')
+
+      const { email } = body
+
+      const user = await this.userModel.findOne({ email: email })
+
+      if (!user || !user.isActive) {
+        throw new NotFoundException(
+          `Usuário com o email: ${email} não foi encontrado`,
         )
-  
-        if (!passwordMatched || existingUser.email !== email) {
-          throw new BadRequestException(
-            `O usuário ou a senha informados estão incorretos`,
-          )
-        }
-  
-        const payload = {
-          sub: existingUser._id,
-          email: email,
-        }
-  
-        const access_token = this.jwtService.sign(payload, {
-          expiresIn: process.env.TOKEN_EXPIRY,
-        })
-  
-        const refresh_token = this.jwtService.sign(payload, {
-          expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-        })
-  
-        return {
-          access_token,
-          refresh_token,
-          _id: existingUser._id,
-          username: existingUser.username,
-          picture: existingUser.picture,
-          email: existingUser.email,
-          isEmailVerified: existingUser.isEmailVerified,
-        }
-      } catch (error) {
-        this.logger.error(error, 'exception')
-        throw error
       }
+
+      return user
+    } catch (error) {
+      this.logger.error({
+        error: JSON.stringify(error),
+        exception: '> exception',
+      })
+      throw error
     }
+  }
 }

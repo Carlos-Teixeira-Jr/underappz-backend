@@ -7,6 +7,8 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { UserModelName, UserSchema } from "../users/schema/User.schema";
 import { jwtConstants } from "./constants";
 import { AuthController } from "./auth.controller";
+import { JwtModule } from "@nestjs/jwt";
+import { UserService } from "../users/users.service";
 
 
 @Module({
@@ -18,15 +20,22 @@ import { AuthController } from "./auth.controller";
       }
     ]),
     UsersModule, 
-    PassportModule.register({ 
+    PassportModule,
+    JwtModule.register({ 
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '1d' } 
-    })
+    }),
+    JwtModule.register({
+      secret: jwtConstants.secret,
+      signOptions: { expiresIn: '1d' },
+    }),
   ],
   controllers: [AuthController],
   providers: [
     AuthService, 
-    LocalStrategy
+    LocalStrategy,
+    //JwtStrategy,
+    UserService
   ]
 })
 

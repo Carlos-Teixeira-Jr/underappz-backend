@@ -60,16 +60,16 @@ ${commonStyles}
 
 </style>`
 
-const localeLogoLink = 'https://localeimoveis.com.br/logo-pointer.png';
+const localeLogoLink = '';
 
 export async function sendEmailVerificationCode(
   email: string,
   emailVerificationCode: string,
 ) {
   const mailOptions = {
-    from: 'Locale Imóveis',
+    from: 'UnderAppz',
     to: email,
-    subject: 'Confirmação de E-mail | Locale',
+    subject: 'Confirmação de E-mail | UnderAppz',
     html: `
       <html>
         <head>
@@ -78,13 +78,13 @@ export async function sendEmailVerificationCode(
         <body>
           <div class="container">
             <div class="sub-container">
-              <img src=${localeLogoLink} alt="Logotipo da Locale Imóveis" class="logo">
-              <p class="title">Olá, seja bem vindo à Locale Imóveis!</p>
+              <img src=${localeLogoLink} alt="Logotipo da UnderAppz" class="logo">
+              <p class="title">Olá, seja bem vindo à UnderAppz!</p>
               <p class="text">Para garantir a segurança da sua conta, precisamos verificar o seu endereço de email.</p>
               <p class="text">Por favor, use o seguinte código de verificação para confirmar o seu cadastro:</p>
               <h1 class="title">${emailVerificationCode}</h1>
               <p class="text">Atenciosamente,</p>
-              <p class="text">Equipe Locale Imóveis</p>
+              <p class="text">Equipe UnderAppz</p>
               <hr>
               <p class="small-text">Caso não tenha feito essa solicitação, por favor desconsidere esse email.</p>
             </div>
