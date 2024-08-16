@@ -1,3 +1,34 @@
+# **UnderAppz Backend**
+
+Este repositório contém o backend do **UnderAppz**, uma aplicação de rede social voltada para artistas independentes e underground. A aplicação backend foi desenvolvida utilizando **NestJS** com **MongoDB** e **Mongoose** como ORM.
+
+O backend é responsável por gerenciar toda a lógica do servidor, autenticação, controle de usuários, e persistência dos dados. Este projeto é essencial para o funcionamento completo do **UnderAppz**, permitindo o cadastro, login e manipulação dos dados dos artistas na plataforma.
+
+> **Nota:** O frontend do **UnderAppz** está rodando em um servidor externo e pode ser acessado em [UnderAppz Frontend](https://underappz.vercel.app/). Para que o aplicativo funcione corretamente, é necessário que o backend esteja em execução localmente conforme as instruções abaixo.
+
+## **O que já está pronto:**
+- **Sistema de Autenticação**: Login e registro de usuários.
+- **API RESTful**: Endpoints para manipulação de dados, como usuários e posts.
+- **Integração com MongoDB**: Gerenciamento e persistência de dados utilizando Mongoose.
+- **Validação e Sanitização de Dados**: Validação robusta para todas as entradas através de decorators do NestJS.
+
+## **Instruções para Desenvolvedores**
+
+Para rodar o backend localmente, siga os passos abaixo:
+
+### **Pré-requisitos:**
+- Node.js (versão 14.x ou superior)
+- MongoDB (versão 4.x ou superior)
+- NPM ou Yarn
+
+### **Passos para Rodar o Backend Localmente:**
+
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/Carlos-Teixeira-Jr/underappz-backend
+
+
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
 </p>
