@@ -1,9 +1,10 @@
-import { Body, Controller, Logger, Post } from "@nestjs/common";
+import { Body, Controller, Get, Logger, Param, Post } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import { UserService } from "./users.service";
+import { PartialUserData, UserService } from "./users.service";
 import { RegisterDto } from "./dto/register.dto";
 import { IUser } from "./schema/User.schema";
 import { GetUserByEmailDto } from "./dto/get-user-by-email.dto";
+import { GetUserDto } from "./dto/get-user.deto";
 
 
 @ApiTags('user')
@@ -14,6 +15,16 @@ export class UserController {
   constructor(
     private readonly userService: UserService
   ) {}
+
+  @ApiOperation({
+    summary: 'Find and return an user by his id.',
+  })
+  @Get(':_id')
+  async findUserById(@Param() params: GetUserDto): Promise<PartialUserData> {
+    this.logger.log({ params }, 'start find user by id > [controller]')
+
+    return this.userService.findOne(params._id)
+  }
 
   @ApiOperation({
     summary: 'Find and return an user by his email.',

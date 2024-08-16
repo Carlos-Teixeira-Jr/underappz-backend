@@ -8,13 +8,29 @@ import { RegisterDto } from './dto/register.dto';
 import { InjectorLoggerService } from '../logger/InjectorLoggerService';
 import { InjectModel } from '@nestjs/mongoose';
 import { IUser, UserModelName } from './schema/User.schema';
-import { Model } from 'mongoose';
+import { Model, Schema } from 'mongoose';
 import { generateRandomString } from 'src/common/utils/generateRandomString';
 import * as bcrypt from 'bcrypt';
 import { sendEmailVerificationCode } from 'src/common/utils/emailHandlers/emailVerification';
 import { LocalLoginDto } from './dto/local-login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { GetUserByEmailDto } from './dto/get-user-by-email.dto';
+
+export type PartialUserData = {
+  _id: Schema.Types.ObjectId
+  email: string
+  username: string
+  picture: string
+  // address: {
+  //   zipCode: string
+  //   city: string
+  //   uf: string
+  //   streetName: string
+  //   streetNumber: string
+  //   complement: string
+  //   neighborhood: string
+  // }
+}
 
 @Injectable()
 export class UserService {
@@ -80,6 +96,32 @@ export class UserService {
     } catch (error) {
       this.logger.error(error, 'exception');
       throw error;
+    }
+  }
+
+  async findOne(_id: Schema.Types.ObjectId): Promise<PartialUserData> {
+    try {
+      this.logger.log({ _id }, 'start find user by id > [service]')
+
+      const user = await this.userModel.findById(_id)
+
+      if (!user || !user.isActive) {
+        throw new NotFoundException(`Usuário com o id: ${_id} não encontrado.`)
+      }
+
+      return {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        picture: user.picture,
+        // address: user.address,
+      }
+    } catch (error) {
+      this.logger.error({
+        error: JSON.stringify(error),
+        exception: '> exception',
+      })
+      throw error
     }
   }
 
