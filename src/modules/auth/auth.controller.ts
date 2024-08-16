@@ -58,5 +58,4 @@ export class AuthController {
   ): Promise<IVerifyEmail> {
     return await this.authService.reSendVerifyEmail(reSendVerifyEmailDto)
   }
-
 }
