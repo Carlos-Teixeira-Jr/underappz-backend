@@ -21,15 +21,6 @@ export type PartialUserData = {
   email: string
   username: string
   picture: string
-  // address: {
-  //   zipCode: string
-  //   city: string
-  //   uf: string
-  //   streetName: string
-  //   streetNumber: string
-  //   complement: string
-  //   neighborhood: string
-  // }
 }
 
 @Injectable()
