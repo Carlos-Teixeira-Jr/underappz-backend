@@ -1,12 +1,11 @@
-import 'dotenv/config'
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as cors from 'cors'
+import * as cors from 'cors';
 import * as session from 'express-session';
 import * as passport from 'passport';
-
 
 function setupSwagger(app: INestApplication) {
   const options = new DocumentBuilder()
@@ -16,30 +15,34 @@ function setupSwagger(app: INestApplication) {
     .addTag('users')
     .addTag('auth')
     .addBearerAuth()
-    .build()
+    .build();
 
-  const document = SwaggerModule.createDocument(app, options)
-  SwaggerModule.setup('api', app, document)
+  const document = SwaggerModule.createDocument(app, options);
+  SwaggerModule.setup('api', app, document);
 }
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(cors({
-    origin: '*'
-  }))
+  app.use(
+    cors({
+      origin: '*',
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    }),
+  );
 
-  setupSwagger(app)
+  setupSwagger(app);
 
-  app.useGlobalPipes(new ValidationPipe({ transform: true }))
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   app.use(
     session({
       secret: 'keyboard cat',
       resave: false,
       saveUninitialized: false,
-      cookie: { maxAge: 3600000 }
-    })
+      cookie: { maxAge: 3600000 },
+    }),
   );
 
   app.use(passport.initialize());
